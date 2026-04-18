@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Placement Risk & Career Predictor</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=DM+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --c1:#070F2B;--c2:#1B1A55;--c3:#535C91;--c4:#9290C3;
+  --ink:#E8E8F4;--ink2:#B8B7D8;--ink3:#7A79A8;
+  --surface2:#111845;--surface3:#161E52;
+  --border:rgba(146,144,195,0.18);--border2:rgba(146,144,195,0.32);
+  --accent:#9290C3;--accent-light:rgba(146,144,195,0.12);
+  --green:#4CAF82;--green-light:rgba(76,175,130,0.15);
+  --warn:#E6A44A;--warn-light:rgba(230,164,74,0.15);
+  --danger:#E06060;--danger-light:rgba(224,96,96,0.15);
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --r:10px;--rl:14px;
+}
+html,body{font-family:var(--font);color:var(--ink);background:var(--c1);font-size:14px;line-height:1.6}
+.wrap{max-width:900px;margin:0 auto;padding:0 1.5rem}
+.screen{display:none;padding:2rem 0}.screen.active{display:block}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:.5px solid var(--border)}
+.ph-title{font-size:20px;font-weight:500;letter-spacing:-.3px}
+.ph-sub{font-size:12px;color:var(--ink3);margin-top:3px;font-family:var(--mono)}
+.badge{display:inline-flex;align-items:center;font-size:11px;font-family:var(--mono);padding:4px 12px;border-radius:99px;border:.5px solid var(--border2);color:var(--ink2);background:var(--surface2)}
+.step-bar{display:flex;gap:6px;margin-bottom:2.25rem}
+.step{flex:1;height:2px;border-radius:2px;background:var(--border2)}.step.done{background:var(--accent)}
+.sec-label{font-size:10px;font-weight:500;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink3);margin-bottom:1.25rem;font-family:var(--mono)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:1.75rem}
+.fg.three{grid-template-columns:1fr 1fr 1fr}
+.ff{display:flex;flex-direction:column;gap:6px}.ff.full{grid-column:1/-1}
+label{font-size:12px;color:var(--ink2);font-weight:500}
+input[type=number],select{width:100%;height:40px;padding:0 12px;border:.5px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--ink);font-family:var(--font);font-size:13px;outline:none;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239290C3' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
+input::placeholder{color:var(--ink3)}
+.err-msg{font-size:11px;color:var(--danger);font-family:var(--mono);min-height:14px}
+.hint{font-size:11px;color:var(--ink3);line-height:1.4}
+.divider{border:none;border-top:.5px solid var(--border);margin:1.75rem 0}
+.row-btns{display:flex;justify-content:space-between;align-items:center}
+.btn-primary{height:42px;padding:0 28px;border:none;border-radius:var(--r);background:var(--c3);color:#fff;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:background .15s;white-space:nowrap}
+.btn-primary:hover{background:var(--c4)}.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{height:38px;padding:0 16px;border:.5px solid var(--border2);border-radius:var(--r);background:transparent;color:var(--ink2);font-family:var(--font);font-size:13px;cursor:pointer;transition:background .15s,color .15s}
+.btn-ghost:hover{background:var(--surface2);color:var(--ink)}
+.loading-overlay{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5rem 0;gap:1.1rem}
+.spinner{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-lbl{font-size:12px;color:var(--ink3);font-family:var(--mono)}
+.error-banner{background:var(--danger-light);border:.5px solid rgba(224,96,96,.4);border-radius:var(--r);padding:14px 16px;margin-bottom:1.5rem;font-size:13px;color:var(--danger);display:none}
+.error-banner.show{display:block}
+.r-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.75rem;padding-bottom:1.5rem;border-bottom:.5px solid var(--border)}
+.r-header-nav{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.r-title{font-size:20px;font-weight:500;letter-spacing:-.3px}
+.r-sub{font-size:12px;color:var(--ink3);margin-top:3px;font-family:var(--mono)}
+.back-btn{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink3);cursor:pointer;background:none;border:none;font-family:var(--font);padding:0;transition:color .15s}
+.back-btn:hover{color:var(--ink)}.sep{width:1px;height:14px;background:var(--border2)}
+.view-toggle{display:flex;border:.5px solid var(--border2);border-radius:var(--r);overflow:hidden;background:var(--surface2)}
+.view-toggle button{flex:1;height:30px;padding:0 14px;border:none;background:transparent;color:var(--ink3);font-family:var(--font);font-size:12px;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap}
+.view-toggle button.active{background:var(--c3);color:#fff;font-weight:500}
+.risk-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:99px;font-size:12px;font-weight:500;font-family:var(--mono)}
+.rb-low{background:var(--green-light);color:var(--green);border:.5px solid rgba(76,175,130,.3)}
+.rb-med{background:var(--warn-light);color:var(--warn);border:.5px solid rgba(230,164,74,.3)}
+.rb-high{background:var(--danger-light);color:var(--danger);border:.5px solid rgba(224,96,96,.3)}
+.stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.75rem}
+.stat-card{background:var(--surface2);border:.5px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.stat-lbl{font-size:10px;color:var(--ink3);font-family:var(--mono);margin-bottom:8px;letter-spacing:.5px;text-transform:uppercase}
+.stat-val{font-size:22px;font-weight:500;letter-spacing:-.5px;line-height:1.2}
+.stat-sub{font-size:11px;color:var(--ink3);margin-top:4px}
+.section-group{margin-bottom:1.75rem}
+.section-title{font-size:10px;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink3);font-family:var(--mono);margin-bottom:1rem}
+.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.three-col{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.card{background:var(--surface2);border:.5px solid var(--border);border-radius:var(--rl);padding:1.25rem 1.35rem}
+.card-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink3);font-family:var(--mono);margin-bottom:1rem}
+.tl-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.tl-lbl{font-size:12px;color:var(--ink2);min-width:82px}
+.tl-track{flex:1;height:5px;border-radius:3px;background:var(--surface3)}
+.tl-fill{height:5px;border-radius:3px;background:var(--accent);transition:width 1s cubic-bezier(.4,0,.2,1)}
+.tl-pct{font-size:12px;font-family:var(--mono);color:var(--ink2);min-width:34px;text-align:right}
+.sal-mid{font-size:22px;font-weight:500;letter-spacing:-.5px;margin-bottom:6px}
+.sal-mid span{font-size:13px;color:var(--ink3);font-weight:400;margin-left:5px}
+.sal-range{display:flex;align-items:center;gap:10px;margin:8px 0}
+.sal-lo,.sal-hi{font-size:11px;color:var(--ink3);font-family:var(--mono);white-space:nowrap}
+.sal-track{flex:1;height:7px;border-radius:4px;background:var(--surface3);position:relative}
+.sal-fill{position:absolute;height:7px;border-radius:4px;background:rgba(83,92,145,.35);border:1px solid var(--c3)}
+.sal-note{font-size:11px;color:var(--ink3);margin-top:4px;line-height:1.5}
+.inner-divider{border:none;border-top:.5px solid var(--border);margin:12px 0}
+.fac-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.fac-lbl{font-size:12px;color:var(--ink2);min-width:130px}
+.fac-track{flex:1;height:5px;border-radius:3px;background:var(--surface3)}
+.fac-fill{height:5px;border-radius:3px}
+.fac-pct{font-size:11px;font-family:var(--mono);color:var(--ink3);min-width:32px;text-align:right}
+.alert-item{display:flex;gap:9px;align-items:flex-start;padding:9px 12px;border-radius:8px;margin-bottom:7px;font-size:12px;line-height:1.5}
+.alert-item:last-child{margin-bottom:0}
+.al-low{background:var(--green-light);color:var(--green)}
+.al-med{background:var(--warn-light);color:var(--warn)}
+.al-high{background:var(--danger-light);color:var(--danger)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.d-low{background:var(--green)}.d-med{background:var(--warn)}.d-high{background:var(--danger)}
+.rec-item{display:flex;gap:12px;padding:11px 0;border-bottom:.5px solid var(--border)}
+.rec-item:last-child{border-bottom:none;padding-bottom:0}
+.rec-num{width:22px;height:22px;border-radius:50%;background:var(--surface3);border:.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-family:var(--mono);color:var(--ink3);flex-shrink:0;margin-top:1px}
+.rec-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.rec-desc{font-size:12px;color:var(--ink2);line-height:1.5}
+.conf-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:.5px solid var(--border)}
+.conf-row:last-child{border-bottom:none}
+.conf-key{font-size:12px;color:var(--ink2)}.conf-val{font-size:12px;font-family:var(--mono);font-weight:500}
+.pos{color:var(--green)}.neg{color:var(--danger)}.neu{color:var(--ink3)}
+.meter-track{height:5px;border-radius:3px;background:var(--surface3);margin-top:8px}
+.meter-fill{height:5px;border-radius:3px;transition:width .8s}
+.conf-sig-val{font-size:20px;font-weight:500;letter-spacing:-.5px}
+.conf-sig-note{font-size:11px;color:var(--ink3);margin-top:3px;font-family:var(--mono);line-height:1.4}
+.ai-summary{font-size:13px;color:var(--ink2);line-height:1.75}
+/* Chips */
+.chip-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.chip{display:inline-flex;padding:4px 11px;border-radius:99px;font-size:11px;font-family:var(--mono);border:.5px solid var(--border2);color:var(--ink2);background:var(--surface3)}
+/* Coaching tabs */
+.tab-bar{display:flex;gap:0;border:.5px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-bottom:1rem}
+.tab-btn{flex:1;height:32px;border:none;background:transparent;color:var(--ink3);font-family:var(--font);font-size:12px;cursor:pointer;transition:background .15s,color .15s}
+.tab-btn.active{background:var(--c3);color:#fff;font-weight:500}
+.tab-panel{display:none}.tab-panel.active{display:block}
+/* Cohort banner */
+.cohort-bar{background:var(--surface2);border:.5px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
+.cohort-pct{font-size:24px;font-weight:500;letter-spacing:-.5px;color:var(--accent);min-width:56px}
+.cohort-label{font-size:12px;color:var(--ink2);line-height:1.5}
+/* What-if */
+.whatif-card{background:var(--surface2);border:.5px solid var(--border);border-radius:var(--rl);padding:1.25rem 1.35rem;margin-top:14px}
+.wi-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.wi-lbl{font-size:12px;color:var(--ink2);min-width:140px}
+input[type=range]{flex:1;accent-color:var(--accent);cursor:pointer}
+.wi-val{font-size:12px;font-family:var(--mono);min-width:32px;color:var(--ink)}
+.wi-delta{font-size:12px;font-family:var(--mono);min-width:90px;text-align:right}
+.wi-result{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px;line-height:1.6;background:var(--surface3);color:var(--ink2);border:.5px solid var(--border)}
+.ai-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:99px;background:rgba(146,144,195,.15);color:var(--accent);border:.5px solid var(--border2);margin-left:8px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div style="background:var(--c1);min-height:100vh">
+<div class="wrap">
+
+<!-- ═══════════ FORM SCREEN ═══════════ -->
+<div id="screen-form" class="screen active">
+  <div class="ph">
+    <div><div class="ph-title">Placement risk assessment</div><div class="ph-sub">AI-powered · Education loan underwriting</div></div>
+    <div class="badge">v3.0 · Beta</div>
+  </div>
+  <div class="step-bar">
+    <div class="step done" id="s1"></div><div class="step" id="s2"></div>
+    <div class="step" id="s3"></div><div class="step" id="s4"></div>
+  </div>
+
+  <div id="section-1">
+    <div class="sec-label">Section 1 of 4 — Student academics</div>
+    <div class="fg">
+      <div class="ff"><label>CGPA / GPA</label><input type="number" id="f-cgpa" min="0" max="10" step="0.1" placeholder="e.g. 7.8"><div class="err-msg" id="e-cgpa"></div><div class="hint">Scale of 10.</div></div>
+      <div class="ff"><label>Academic trend</label><select id="f-trend"><option value="">Select trend</option><option>Consistently strong</option><option>Improving</option><option>Consistent</option><option>Declining</option></select><div class="err-msg" id="e-trend"></div></div>
+      <div class="ff"><label>Course / discipline</label><select id="f-course"><option value="">Select course</option><option>Computer Science</option><option>Electronics</option><option>Mechanical</option><option>Civil</option><option>MBA</option><option>Biotech</option><option>Nursing</option><option>Commerce</option><option>Law</option><option>Architecture</option><option>Psychology</option><option>Pharmacy</option><option>Agriculture</option><option>Media</option><option>Mathematics</option></select><div class="err-msg" id="e-course"></div></div>
+      <div class="ff"><label>Year of graduation</label><select id="f-year"><option value="">Select year</option><option>2025</option><option>2026</option><option>2027</option><option>2028</option></select><div class="err-msg" id="e-year"></div></div>
+    </div>
+    <div class="row-btns"><span></span><button class="btn-primary" onclick="goTo(2)">Continue →</button></div>
+  </div>
+
+  <div id="section-2" style="display:none">
+    <div class="sec-label">Section 2 of 4 — Experience & skills</div>
+    <div class="fg">
+      <div class="ff"><label>Number of internships</label><input type="number" id="f-interns" min="0" placeholder="e.g. 2"><div class="err-msg" id="e-interns"></div></div>
+      <div class="ff"><label>Internship quality</label><select id="f-intern-q"><option value="">Select quality</option><option>Fortune 500 / MNC</option><option>Mid-size company</option><option>Startup</option><option>Research / Academic lab</option><option>No internship</option></select></div>
+      <div class="ff"><label>Certifications / courses</label><input type="number" id="f-certs" min="0" placeholder="e.g. 3"><div class="err-msg" id="e-certs"></div></div>
+      <div class="ff"><label>Skill self-assessment</label><select id="f-skill"><option value="">Select level</option><option>Advanced (industry-ready)</option><option>Intermediate</option><option>Beginner</option></select><div class="err-msg" id="e-skill"></div></div>
+      <div class="ff full"><label>Projects / portfolio</label><select id="f-projects"><option value="">Select</option><option>Published / deployed project</option><option>Multiple academic projects</option><option>1–2 college projects</option><option>None</option></select></div>
+    </div>
+    <div class="row-btns"><button class="btn-ghost" onclick="goTo(1)">← Back</button><button class="btn-primary" onclick="goTo(3)">Continue →</button></div>
+  </div>
+
+  <div id="section-3" style="display:none">
+    <div class="sec-label">Section 3 of 4 — Institute & program</div>
+    <div class="fg">
+      <div class="ff"><label>Institute tier</label><select id="f-tier"><option value="">Select tier</option><option>Tier 1 (IIT / IIM / NIT / Top 10)</option><option>Tier 2 (State govt. / NAAC A)</option><option>Tier 3 (Private / NAAC B)</option></select><div class="err-msg" id="e-tier"></div></div>
+      <div class="ff"><label>Placement cell strength</label><select id="f-placement-cell"><option value="">Select</option><option>Very active (100+ recruiters)</option><option>Active (50–100 recruiters)</option><option>Moderate</option><option>Weak / inactive</option></select></div>
+      <div class="ff"><label>Historic placement rate (%)</label><input type="number" id="f-prate" min="0" max="100" placeholder="e.g. 78"><div class="err-msg" id="e-prate"></div></div>
+      <div class="ff"><label>Avg. CTC at institute (LPA)</label><input type="number" id="f-avg-ctc" min="0" placeholder="e.g. 8.5"><div class="err-msg" id="e-avgctc"></div></div>
+    </div>
+    <div class="row-btns"><button class="btn-ghost" onclick="goTo(2)">← Back</button><button class="btn-primary" onclick="goTo(4)">Continue →</button></div>
+  </div>
+
+  <div id="section-4" style="display:none">
+    <div class="sec-label">Section 4 of 4 — Market signals</div>
+    <div class="fg three">
+      <div class="ff"><label>Job demand (field)</label><select id="f-demand"><option value="">Select</option><option>Very high</option><option>High</option><option>Moderate</option><option>Low</option></select><div class="err-msg" id="e-demand"></div></div>
+      <div class="ff"><label>Region</label><select id="f-region"><option value="">Select</option><option>Metro (Mumbai/Delhi/Bangalore)</option><option>Tier 2 city</option><option>Tier 3 city / rural</option><option>International / remote</option></select></div>
+      <div class="ff"><label>Job portal activity</label><select id="f-jpa"><option value="">Select</option><option>Actively applying (daily)</option><option>Occasionally browsing</option><option>Not started</option></select></div>
+    </div>
+    <div class="fg">
+      <div class="ff"><label>Interview pipeline</label><select id="f-pipeline"><option value="">Select</option><option>Offers in hand</option><option>Multiple rounds ongoing</option><option>First rounds scheduled</option><option>No interviews yet</option></select></div>
+      <div class="ff"><label>Macroeconomic outlook</label><select id="f-macro"><option value="">Select</option><option>Hiring boom / expansion</option><option>Stable</option><option>Slowdown / cautious hiring</option><option>Recession / layoffs</option></select></div>
+    </div>
+    <div class="divider"></div>
+    <div class="row-btns"><button class="btn-ghost" onclick="goTo(3)">← Back</button><button class="btn-primary" id="run-btn" onclick="startAssessment()">Run assessment</button></div>
+  </div>
+</div>
+
+<!-- ═══════════ RESULTS SCREEN ═══════════ -->
+<div id="screen-results" class="screen">
+  <div id="loading-state">
+    <div class="loading-overlay"><div class="spinner"></div><div class="loading-lbl" id="loading-label">Connecting to model...</div></div>
+  </div>
+  <div class="error-banner" id="error-banner">⚠ Could not connect to backend. Make sure api.py is running on http://127.0.0.1:5000.<br><small id="error-detail"></small></div>
+
+  <div id="results-content" style="display:none">
+    <div class="r-header">
+      <div>
+        <div class="r-header-nav">
+          <button class="back-btn" onclick="showForm()">← New assessment</button>
+          <div class="sep"></div>
+          <div class="view-toggle" id="r-view-toggle">
+            <button class="active" onclick="setView('student')">Student view</button>
+            <button onclick="setView('lender')">Lender view</button>
+          </div>
+        </div>
+        <div class="r-title">Assessment report</div>
+        <div class="r-sub" id="r-sub"></div>
+      </div>
+      <div style="padding-top:44px" id="r-risk-badge"></div>
+    </div>
+
+    <!-- Cohort banner -->
+    <div class="cohort-bar" id="r-cohort-bar" style="display:none">
+      <div class="cohort-pct" id="r-cohort-pct">—</div>
+      <div class="cohort-label" id="r-cohort-label">Loading cohort data…</div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="section-group">
+      <div class="section-title">Summary</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-lbl">Risk score</div><div class="stat-val" id="r-risk-score">—</div><div class="stat-sub" id="r-risk-label">—</div></div>
+        <div class="stat-card"><div class="stat-lbl">Confidence</div><div class="stat-val" id="r-confidence">—</div><div class="stat-sub">prediction certainty</div></div>
+        <div class="stat-card"><div class="stat-lbl">Expected salary</div><div class="stat-val" id="r-salary">—</div><div class="stat-sub">LPA midpoint</div></div>
+        <div class="stat-card"><div class="stat-lbl">Timeline</div><div class="stat-val" id="r-timeline" style="font-size:15px;line-height:1.3;margin-top:2px">—</div><div class="stat-sub">most likely window</div></div>
+      </div>
+    </div>
+
+    <!-- Probability & salary -->
+    <div class="section-group">
+      <div class="section-title">Probability & salary</div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-lbl">Placement probability</div>
+          <div id="timeline-bars"></div>
+          <div style="margin-top:12px;padding-top:12px;border-top:.5px solid var(--border)">
+            <div style="font-size:11px;color:var(--ink3);font-family:var(--mono)">95% confidence interval</div>
+            <div style="font-size:12px;color:var(--ink2);margin-top:4px" id="r-conf-text"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-lbl">Salary estimate</div>
+          <div class="sal-mid" id="r-salary-mid">—</div>
+          <div class="sal-range">
+            <div class="sal-lo" id="r-sal-lo">—</div>
+            <div class="sal-track"><div class="sal-fill" id="r-sal-fill" style="left:10%;width:80%"></div></div>
+            <div class="sal-hi" id="r-sal-hi">—</div>
+          </div>
+          <div class="sal-note" id="r-sal-note"></div>
+          <div class="inner-divider"></div>
+          <div class="card-lbl">Peer benchmark</div>
+          <div id="r-benchmark-bars"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk breakdown -->
+    <div class="section-group">
+      <div class="section-title">Risk breakdown</div>
+      <div class="two-col">
+        <div class="card"><div class="card-lbl">Factor scores</div><div id="r-factors"></div></div>
+        <div class="card"><div class="card-lbl">SHAP risk signals</div><div id="r-alerts"></div></div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="section-group">
+      <div class="section-title">Actions & coaching</div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-lbl">Recommended actions</div>
+        <div id="r-recs"></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-lbl">Resume & interview coaching</div>
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="switchTab('resume')">Resume tips</button>
+          <button class="tab-btn" onclick="switchTab('interview')">Interview tips</button>
+          <button class="tab-btn" onclick="switchTab('recruiters')">Recruiter matches</button>
+        </div>
+        <div id="tab-resume" class="tab-panel active"><div id="r-resume-tips"></div></div>
+        <div id="tab-interview" class="tab-panel"><div id="r-interview-tips"></div></div>
+        <div id="tab-recruiters" class="tab-panel"><div id="r-recruiters"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-lbl">AI risk summary <span id="r-ai-tag"></span></div>
+        <div class="ai-summary" id="r-summary"></div>
+      </div>
+    </div>
+
+    <!-- What-if simulator -->
+    <div class="section-group">
+      <div class="section-title">What-if simulator</div>
+      <div class="whatif-card">
+        <div class="card-lbl">Adjust profile — see how risk changes</div>
+        <div class="wi-row">
+          <div class="wi-lbl">CGPA</div>
+          <input type="range" id="wi-cgpa" min="4" max="10" step="0.1" oninput="updateWI()">
+          <div class="wi-val" id="wi-cgpa-val">—</div>
+          <div class="wi-delta" id="wi-cgpa-delta"></div>
+        </div>
+        <div class="wi-row">
+          <div class="wi-lbl">Internships</div>
+          <input type="range" id="wi-interns" min="0" max="5" step="1" oninput="updateWI()">
+          <div class="wi-val" id="wi-interns-val">—</div>
+          <div class="wi-delta" id="wi-interns-delta"></div>
+        </div>
+        <div class="wi-row">
+          <div class="wi-lbl">Certifications</div>
+          <input type="range" id="wi-certs" min="0" max="8" step="1" oninput="updateWI()">
+          <div class="wi-val" id="wi-certs-val">—</div>
+          <div class="wi-delta" id="wi-certs-delta"></div>
+        </div>
+        <div class="wi-result" id="wi-result">Adjust sliders to simulate profile improvements.</div>
+      </div>
+    </div>
+
+    <!-- Lender-only -->
+    <div class="section-group" id="r-lender-section" style="display:none">
+      <div class="section-title">Lender portfolio signal</div>
+      <div class="card"><div class="card-lbl">Portfolio signal</div><div id="r-lender-content"></div></div>
+    </div>
+
+    <!-- Confidence signals -->
+    <div class="section-group">
+      <div class="section-title">Confidence by signal</div>
+      <div class="three-col">
+        <div class="card"><div class="card-lbl">Academic signal</div><div id="r-conf-academic"></div></div>
+        <div class="card"><div class="card-lbl">Experience signal</div><div id="r-conf-exp"></div></div>
+        <div class="card"><div class="card-lbl">Market signal</div><div id="r-conf-market"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+const API_BASE = 'http://127.0.0.1:5000';
+let currentSection = 1, currentView = 'student';
+let _lastPayload = null, _baseRisk = null, _baseP6 = null, _baseSal = null;
+let _wiTimer = null;
+
+function g(id){ return document.getElementById(id); }
+function pct(v){ return Math.round(v*100)+'%'; }
+function lpa(v){ return parseFloat(v).toFixed(1)+' LPA'; }
+
+const FEATURE_LABELS = {
+  cgpa:'Academic score (CGPA)', internships:'Internship count',
+  intern_quality:'Internship quality', certifications:'Certifications',
+  skill_level:'Skill level', projects_score:'Portfolio / projects',
+  course:'Course', tier:'Institute tier', placement_rate:'Historic placement rate',
+  avg_salary:'Institute avg salary', placement_cell:'Placement cell strength',
+  job_demand:'Field job demand', job_activity:'Job search activity',
+  region_density:'Location job density', macro:'Market conditions', pipeline:'Interview pipeline'
+};
+function fmtF(f){ return FEATURE_LABELS[f]||f.replaceAll('_',' '); }
+
+// ── Navigation ───────────────────────────────────────────────────────────────
+function goTo(n){
+  if(n>currentSection && !validateSection(currentSection)) return;
+  currentSection=n;
+  for(let i=1;i<=4;i++){
+    g('section-'+i).style.display=i===n?'block':'none';
+    g('s'+i).classList.toggle('done',i<=n);
+  }
+}
+function showForm(){
+  g('screen-results').classList.remove('active');
+  g('screen-form').classList.add('active');
+  g('error-banner').classList.remove('show');
+}
+function setView(v){
+  currentView=v;
+  const btns=g('r-view-toggle').querySelectorAll('button');
+  btns[0].classList.toggle('active',v==='student');
+  btns[1].classList.toggle('active',v==='lender');
+  g('r-lender-section').style.display=v==='lender'?'block':'none';
+}
+function switchTab(name){
+  ['resume','interview','recruiters'].forEach(t=>{
+    g('tab-'+t).classList.toggle('active',t===name);
+    g('tab-'+t).previousElementSibling && null;
+  });
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    b.classList.toggle('active',['resume','interview','recruiters'][i]===name);
+  });
+}
+
+// ── Validation ───────────────────────────────────────────────────────────────
+function validateSection(n){
+  let ok=true;
+  const se=(id,m)=>{g(id).textContent=m;ok=false;};
+  const ce=(id)=>{g(id).textContent='';};
+  if(n===1){
+    const c=parseFloat(g('f-cgpa').value);
+    (isNaN(c)||c<0||c>10)?se('e-cgpa','Enter 0–10'):ce('e-cgpa');
+    !g('f-trend').value?se('e-trend','Required'):ce('e-trend');
+    !g('f-course').value?se('e-course','Required'):ce('e-course');
+    !g('f-year').value?se('e-year','Required'):ce('e-year');
+  }
+  if(n===2){
+    const iv=parseInt(g('f-interns').value);
+    (isNaN(iv)||iv<0)?se('e-interns','Enter 0 or more'):ce('e-interns');
+    const cv=parseInt(g('f-certs').value);
+    (isNaN(cv)||cv<0)?se('e-certs','Enter 0 or more'):ce('e-certs');
+    !g('f-skill').value?se('e-skill','Required'):ce('e-skill');
+  }
+  if(n===3){
+    !g('f-tier').value?se('e-tier','Required'):ce('e-tier');
+    const pr=parseFloat(g('f-prate').value);
+    (isNaN(pr)||pr<0||pr>100)?se('e-prate','Enter 0–100'):ce('e-prate');
+    const ac=parseFloat(g('f-avg-ctc').value);
+    (isNaN(ac)||ac<0)?se('e-avgctc','Enter a positive number'):ce('e-avgctc');
+  }
+  if(n===4){ !g('f-demand').value?se('e-demand','Required'):ce('e-demand'); }
+  return ok;
+}
+
+function collectFormData(){
+  return {
+    cgpa:           parseFloat(g('f-cgpa').value),
+    trend:          g('f-trend').value,
+    course:         g('f-course').value,
+    year:           g('f-year').value,
+    internships:    parseInt(g('f-interns').value)||0,
+    intern_quality: g('f-intern-q').value,
+    certifications: parseInt(g('f-certs').value)||0,
+    skill:          g('f-skill').value,
+    projects:       g('f-projects').value,
+    tier:           g('f-tier').value,
+    placement_cell: g('f-placement-cell').value,
+    placement_rate: parseFloat(g('f-prate').value),
+    avg_salary:     parseFloat(g('f-avg-ctc').value),
+    job_demand:     g('f-demand').value,
+    region:         g('f-region').value,
+    job_activity:   g('f-jpa').value,
+    pipeline:       g('f-pipeline').value,
+    macro:          g('f-macro').value
+  };
+}
+
+// ── Loading ──────────────────────────────────────────────────────────────────
+const loadMsgs=['Connecting to model...','Running placement analysis...','Calibrating salary estimator...','Scoring risk factors...','Generating SHAP explanations...','Finalising report...'];
+let lIdx=0,lInt=null;
+function startLoadingCycle(){ lIdx=0; g('loading-label').textContent=loadMsgs[0]; lInt=setInterval(()=>{ lIdx=(lIdx+1)%loadMsgs.length; g('loading-label').textContent=loadMsgs[lIdx]; },900); }
+function stopLoadingCycle(){ clearInterval(lInt); }
+
+// ── Main ─────────────────────────────────────────────────────────────────────
+async function startAssessment(){
+  if(!validateSection(4)) return;
+  const btn=g('run-btn'); btn.disabled=true; btn.textContent='Running...';
+  g('screen-form').classList.remove('active');
+  g('screen-results').classList.add('active');
+  g('loading-state').style.display='block';
+  g('results-content').style.display='none';
+  g('error-banner').classList.remove('show');
+  startLoadingCycle();
+  try{
+    _lastPayload=collectFormData();
+    const res=await fetch(`${API_BASE}/predict`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_lastPayload)});
+    if(!res.ok) throw new Error(`Server ${res.status} ${res.statusText}`);
+    const data=await res.json();
+    if(data.error) throw new Error(data.error);
+    stopLoadingCycle();
+    _baseRisk=data.riskScore; _baseP6=data.p6; _baseSal=data.salMid;
+    buildResults(data,_lastPayload);
+    initWhatIf(_lastPayload);
+    g('loading-state').style.display='none';
+    g('results-content').style.display='block';
+  }catch(err){
+    stopLoadingCycle();
+    g('loading-state').style.display='none';
+    g('error-banner').classList.add('show');
+    g('error-detail').textContent=err.message;
+  }
+  btn.disabled=false; btn.textContent='Run assessment';
+}
+
+// ── Build results ─────────────────────────────────────────────────────────────
+function buildResults(d,form){
+  const tierShort=(form.tier||'').split('(')[0].trim();
+  g('r-sub').textContent=`${form.course} · ${tierShort} · ${form.year}`;
+
+  const rc={Low:'rb-low',Medium:'rb-med',High:'rb-high'}[d.risk]||'rb-med';
+  g('r-risk-badge').innerHTML=`<div class="risk-badge ${rc}">${d.risk} risk</div>`;
+
+  g('r-risk-score').textContent=d.riskScore+'/100';
+  g('r-risk-score').style.color=d.risk==='Low'?'var(--green)':d.risk==='Medium'?'var(--warn)':'var(--danger)';
+  g('r-risk-label').textContent=d.risk+' placement risk';
+  g('r-confidence').textContent=pct(d.confidence);
+  g('r-salary').textContent=lpa(d.salMid);
+  g('r-timeline').textContent=d.timeline;
+
+  // Cohort banner
+  if(d.cohort && d.cohort.percentile !== null){
+    const c=d.cohort;
+    g('r-cohort-pct').textContent=`Top ${100-c.percentile}%`;
+    g('r-cohort-label').innerHTML=
+      `Among <strong>${form.course}</strong> students from Tier ${form.tier.split(' ')[1]||'2'} institutes<br>`+
+      `Cohort avg placement (6mo): ${pct(c.cohort_p6_avg)} · Cohort avg salary: ${lpa(c.cohort_sal_avg)} · n=${c.cohort_size}`;
+    g('r-cohort-bar').style.display='flex';
+  }
+
+  // Probability bars
+  g('timeline-bars').innerHTML=`
+    <div class="tl-row"><div class="tl-lbl">Within 3 mo</div><div class="tl-track"><div class="tl-fill" style="width:${pct(d.p3)}"></div></div><div class="tl-pct">${pct(d.p3)}</div></div>
+    <div class="tl-row"><div class="tl-lbl">Within 6 mo</div><div class="tl-track"><div class="tl-fill" style="width:${pct(d.p6)}"></div></div><div class="tl-pct">${pct(d.p6)}</div></div>
+    <div class="tl-row"><div class="tl-lbl">Within 12 mo</div><div class="tl-track"><div class="tl-fill" style="width:${pct(d.p12)}"></div></div><div class="tl-pct">${pct(d.p12)}</div></div>`;
+  const ciL=Math.max(0,d.p6-0.10),ciH=Math.min(1,d.p6+0.10);
+  g('r-conf-text').textContent=`6-month: ${pct(ciL)} – ${pct(ciH)} (95% CI)`;
+
+  // Salary
+  g('r-salary-mid').innerHTML=`${lpa(d.salMid)}<span>midpoint</span>`;
+  g('r-sal-lo').textContent=lpa(d.salLo);
+  g('r-sal-hi').textContent=lpa(d.salHi);
+  g('r-sal-note').textContent=`Peer avg: ${lpa(d.avgCtc)} · Estimate reflects profile premium.`;
+  const bmax=Math.max(d.salHi,d.avgCtc)*1.1;
+  g('r-benchmark-bars').innerHTML=`
+    <div class="fac-row"><div class="fac-lbl">Your estimate</div><div class="fac-track"><div class="fac-fill" style="width:${Math.round(d.salMid/bmax*100)}%;background:var(--accent)"></div></div><div class="fac-pct">${lpa(d.salMid)}</div></div>
+    <div class="fac-row"><div class="fac-lbl">Institute avg</div><div class="fac-track"><div class="fac-fill" style="width:${Math.round(d.avgCtc/bmax*100)}%;background:var(--ink3)"></div></div><div class="fac-pct">${lpa(d.avgCtc)}</div></div>
+    <div class="fac-row"><div class="fac-lbl">Low estimate</div><div class="fac-track"><div class="fac-fill" style="width:${Math.round(d.salLo/bmax*100)}%;background:var(--border2)"></div></div><div class="fac-pct">${lpa(d.salLo)}</div></div>`;
+
+  // Factor breakdown
+  g('r-factors').innerHTML=[
+    {label:'Academic strength',val:d.acadScore},
+    {label:'Experience',val:d.expScore},
+    {label:'Institute quality',val:d.instScore},
+    {label:'Market conditions',val:d.marketScore}
+  ].map(f=>{
+    const c=f.val>0.65?'var(--green)':f.val>0.4?'var(--warn)':'var(--danger)';
+    return `<div class="fac-row"><div class="fac-lbl">${f.label}</div><div class="fac-track"><div class="fac-fill" style="width:${pct(f.val)};background:${c}"></div></div><div class="fac-pct">${pct(f.val)}</div></div>`;
+  }).join('');
+
+  // SHAP signals
+  const alerts=[];
+  (d.shap_positive||[]).forEach(s=>alerts.push({type:'low',msg:`<strong>${fmtF(s.feature)}</strong> is boosting your placement chances`}));
+  (d.shap_negative||[]).forEach(s=>alerts.push({type:'high',msg:`<strong>${fmtF(s.feature)}</strong> is the primary risk factor`}));
+  g('r-alerts').innerHTML=alerts.map(a=>`<div class="alert-item al-${a.type}"><div class="dot d-${a.type}"></div><div>${a.msg}</div></div>`).join('')||'<div style="color:var(--ink3);font-size:12px">No major risk signals detected.</div>';
+
+  // Recommendations (rich, from API)
+  const recs=d.recommendations||[];
+  g('r-recs').innerHTML=recs.length
+    ? recs.map((r,i)=>`<div class="rec-item"><div class="rec-num">${i+1}</div><div><div class="rec-title">${r.title}</div><div class="rec-desc">${r.desc}</div></div></div>`).join('')
+    : '<div style="color:var(--ink3);font-size:12px">No urgent actions — profile looks strong.</div>';
+
+  // Resume tips
+  const rtips=d.resume_tips||[];
+  g('r-resume-tips').innerHTML=rtips.length
+    ? rtips.map((t,i)=>`<div class="rec-item"><div class="rec-num">${i+1}</div><div><div class="rec-desc">${t}</div></div></div>`).join('')
+    : '<div style="color:var(--ink3);font-size:12px;padding:8px 0">No specific resume gaps detected.</div>';
+
+  // Interview tips
+  const itips=d.interview_tips||[];
+  g('r-interview-tips').innerHTML=itips.length
+    ? itips.map((t,i)=>`<div class="rec-item"><div class="rec-num">${i+1}</div><div><div class="rec-desc">${t}</div></div></div>`).join('')
+    : '<div style="color:var(--ink3);font-size:12px;padding:8px 0">No specific interview gaps detected.</div>';
+
+  // Recruiters
+  const recs2=d.recruiters||[];
+  g('r-recruiters').innerHTML=recs2.length
+    ? `<div style="font-size:12px;color:var(--ink3);margin-bottom:10px">Based on your strongest profile signals:</div><div class="chip-row">${recs2.map(r=>`<span class="chip">${r}</span>`).join('')}</div>`
+    : '<div style="color:var(--ink3);font-size:12px;padding:8px 0">No specific matches available.</div>';
+
+  // AI summary
+  g('r-ai-tag').innerHTML=d.ai_powered?'<span class="ai-tag">✦ AI generated</span>':'';
+  g('r-summary').textContent=d.summary;
+
+  // Confidence signals
+  g('r-conf-academic').innerHTML=confSig(d.acadScore,`CGPA ${d.cgpa} · ${form.trend}`);
+  g('r-conf-exp').innerHTML=confSig(d.expScore,`${d.interns} internship(s) · ${form.skill}`);
+  g('r-conf-market').innerHTML=confSig(d.marketScore,`${form.job_demand} demand · ${(form.macro||'').split('/')[0]}`);
+
+  // Lender
+  const li=[
+    {key:'Early delinquency risk',val:d.risk,cls:d.risk==='Low'?'pos':d.risk==='Medium'?'neu':'neg'},
+    {key:'Repayment readiness (6mo)',val:pct(d.p6),cls:d.p6>0.7?'pos':d.p6>0.5?'neu':'neg'},
+    {key:'Salary coverage ratio',val:(d.salMid/4).toFixed(1)+'x',cls:d.salMid/4>2?'pos':'neu'},
+    {key:'Portfolio flag',val:d.riskScore>65?'Flag for review':'Clear',cls:d.riskScore>65?'neg':'pos'},
+    {key:'Cohort percentile',val:d.cohort&&d.cohort.percentile!==null?`Top ${100-d.cohort.percentile}%`:'N/A',cls:'neu'},
+    {key:'Recommended action',val:d.risk==='Low'?'Standard processing':d.risk==='Medium'?'Require skill plan':'Hold — counselling',cls:d.risk==='Low'?'pos':d.risk==='Medium'?'neu':'neg'}
+  ];
+  g('r-lender-content').innerHTML=li.map(i=>`<div class="conf-row"><div class="conf-key">${i.key}</div><div class="conf-val ${i.cls}">${i.val}</div></div>`).join('');
+}
+
+function confSig(val,note){
+  const c=val>0.65?'var(--green)':val>0.4?'var(--warn)':'var(--danger)';
+  return `<div class="conf-sig-val" style="color:${c}">${pct(val)}</div>
+          <div class="conf-sig-note">${note}</div>
+          <div class="meter-track"><div class="meter-fill" style="width:${pct(val)};background:${c}"></div></div>`;
+}
+
+// ── What-if simulator ─────────────────────────────────────────────────────────
+function initWhatIf(form){
+  const ci=g('wi-cgpa'),ii=g('wi-interns'),certi=g('wi-certs');
+  ci.value=form.cgpa; ii.value=form.internships; certi.value=form.certifications;
+  g('wi-cgpa-val').textContent=form.cgpa;
+  g('wi-interns-val').textContent=form.internships;
+  g('wi-certs-val').textContent=form.certifications;
+  g('wi-cgpa-delta').textContent=''; g('wi-interns-delta').textContent=''; g('wi-certs-delta').textContent='';
+  g('wi-result').textContent='Adjust sliders to simulate profile improvements.';
+}
+
+function updateWI(){
+  const cgpaV=parseFloat(g('wi-cgpa').value);
+  const internsV=parseInt(g('wi-interns').value);
+  const certsV=parseInt(g('wi-certs').value);
+  g('wi-cgpa-val').textContent=cgpaV.toFixed(1);
+  g('wi-interns-val').textContent=internsV;
+  g('wi-certs-val').textContent=certsV;
+  clearTimeout(_wiTimer);
+  _wiTimer=setTimeout(()=>runWhatIf(cgpaV,internsV,certsV),600);
+}
+
+async function runWhatIf(cgpaV,internsV,certsV){
+  if(!_lastPayload) return;
+  g('wi-result').textContent='Simulating…';
+  try{
+    const payload={..._lastPayload,cgpa:cgpaV,internships:internsV,certifications:certsV};
+    const res=await fetch(`${API_BASE}/whatif`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await res.json();
+    if(data.error){g('wi-result').textContent='Error: '+data.error;return;}
+
+    const rDelta=data.riskScore-_baseRisk;
+    const pDelta=data.p6-_baseP6;
+    const sDelta=data.salMid-_baseSal;
+
+    function dd(v,inv){ const a=Math.abs(v).toFixed(inv?1:0); return v<0!==inv?`<span style="color:var(--green)">↓${a}${inv?'':''}</span>`:`<span style="color:var(--danger)">↑${a}</span>`; }
+
+    g('wi-cgpa-delta').innerHTML=cgpaV!==_lastPayload.cgpa?dd(cgpaV-_lastPayload.cgpa,true)+' CGPA':'';
+    g('wi-interns-delta').innerHTML=internsV!==_lastPayload.internships?dd(internsV-_lastPayload.internships,false)+' interns':'';
+    g('wi-certs-delta').innerHTML=certsV!==_lastPayload.certifications?dd(certsV-_lastPayload.certifications,false)+' certs':'';
+
+    const rSign=rDelta<0?`<span style="color:var(--green)">↓${Math.abs(rDelta)} pts</span>`:(rDelta>0?`<span style="color:var(--danger)">↑${rDelta} pts</span>`:'no change');
+    const pSign=pDelta>0?`<span style="color:var(--green)">+${pct(pDelta)}</span>`:(pDelta<0?`<span style="color:var(--danger)">${pct(pDelta)}</span>`:'no change');
+    const sSign=sDelta>0?`<span style="color:var(--green)">+${lpa(sDelta)}</span>`:(sDelta<0?`<span style="color:var(--danger)">${lpa(sDelta)}</span>`:'no change');
+
+    g('wi-result').innerHTML=
+      `Risk score: <strong>${data.riskScore}/100</strong> (${rSign}) &nbsp;|&nbsp; `+
+      `6-month placement: <strong>${pct(data.p6)}</strong> (${pSign}) &nbsp;|&nbsp; `+
+      `Expected salary: <strong>${lpa(data.salMid)}</strong> (${sSign})<br>`+
+      `<span style="font-size:11px;color:var(--ink3)">Timeline: ${data.timeline} · Risk: ${data.risk}</span>`;
+  }catch(e){
+    g('wi-result').textContent='Could not simulate — is the API running?';
+  }
+}
+</script>
+</body>
+</html>
