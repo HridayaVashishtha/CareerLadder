@@ -13,9 +13,34 @@ import os
 import json
 import shap
 import anthropic
+import sqlite3
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
+
+# ─── Initialize Database ──────────────────────────────────────────────────────
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, '..', 'assessments.db')
+
+def init_db():
+    """Initialize SQLite database for storing assessments."""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS assessments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT NOT NULL UNIQUE,
+            form_data TEXT NOT NULL,
+            prediction_result TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_db()
 
 # ─── Load models ──────────────────────────────────────────────────────────────
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
@@ -146,6 +171,84 @@ def _ai_summary(course_str, tier_str, cgpa, internships, risk, salary,
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'ok'})
+
+
+@app.route('/save-assessment', methods=['POST'])
+def save_assessment():
+    """Save assessment results for a student."""
+    try:
+        data = request.json
+        student_id = data.get('student_id')
+        form_data = data.get('form_data')
+        prediction_result = data.get('prediction_result')
+
+        if not student_id:
+            return jsonify({'error': 'student_id is required'}), 400
+
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+
+        # Check if assessment exists
+        c.execute('SELECT id FROM assessments WHERE student_id = ?', (student_id,))
+        existing = c.fetchone()
+
+        if existing:
+            # Update existing
+            c.execute('''
+                UPDATE assessments
+                SET form_data = ?, prediction_result = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE student_id = ?
+            ''', (json.dumps(form_data), json.dumps(prediction_result), student_id))
+        else:
+            # Insert new
+            c.execute('''
+                INSERT INTO assessments (student_id, form_data, prediction_result)
+                VALUES (?, ?, ?)
+            ''', (student_id, json.dumps(form_data), json.dumps(prediction_result)))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': 'Assessment saved successfully',
+            'student_id': student_id
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/get-assessment/<student_id>', methods=['GET'])
+def get_assessment(student_id):
+    """Retrieve assessment results for a student."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+
+        c.execute('''
+            SELECT form_data, prediction_result, created_at, updated_at
+            FROM assessments
+            WHERE student_id = ?
+        ''', (student_id,))
+
+        row = c.fetchone()
+        conn.close()
+
+        if not row:
+            return jsonify({'error': 'Assessment not found'}), 404
+
+        return jsonify({
+            'student_id': student_id,
+            'form_data': json.loads(row['form_data']),
+            'prediction_result': json.loads(row['prediction_result']),
+            'created_at': row['created_at'],
+            'updated_at': row['updated_at']
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/predict', methods=['POST'])

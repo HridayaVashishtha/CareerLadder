@@ -5,26 +5,10 @@ import { TrendingUp, BarChart3, Zap, Target } from 'lucide-react';
 
 export default function Home() {
   return (
-    <main className="min-h-screen overflow-x-hidden">
+    <main className="min-h-screen overflow-x-hidden pt-20">
       {/* Glowing Background Blobs */}
       <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500/20 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-20 right-20 w-72 h-72 bg-blue-500/20 blur-[120px] rounded-full pointer-events-none" />
-
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/[0.04] backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">CP</span>
-            </div>
-            <span className="text-xl font-bold text-white">Career Predictor</span>
-          </div>
-          <div className="hidden md:flex items-center gap-6">
-            <a href="#features" className="text-slate-300 hover:text-white transition">Features</a>
-            <a href="#how-it-works" className="text-slate-300 hover:text-white transition">How it works</a>
-          </div>
-        </div>
-      </nav>
 
       {/* Hero Section */}
       <section className="pt-32 pb-24 px-4 flex items-center justify-center">
@@ -170,7 +154,7 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-slate-800 py-8 px-4 text-center text-slate-500">
-        <p>© 2026 AI Career Predictor. All rights reserved. | Built for education loan students.</p>
+        <p>© 2026 CareerLadder. All rights reserved. | Built for education loan students.</p>
       </footer>
     </main>
   );

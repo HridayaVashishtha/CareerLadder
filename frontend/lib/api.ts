@@ -78,3 +78,44 @@ export async function whatIf(data: FormData): Promise<PredictionResult> {
   if (!res.ok) throw new Error(`Server ${res.status}`);
   return await res.json();
 }
+
+export async function saveAssessment(
+  studentId: string,
+  formData: FormData,
+  predictionResult: PredictionResult
+): Promise<{ success: boolean; message: string; student_id: string }> {
+  const res = await fetch(`${API_BASE}/save-assessment`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      student_id: studentId,
+      form_data: formData,
+      prediction_result: predictionResult,
+    }),
+  });
+
+  if (!res.ok) throw new Error(`Server ${res.status}`);
+  const result = await res.json();
+  if (result.error) throw new Error(result.error);
+  return result;
+}
+
+export async function getAssessment(
+  studentId: string
+): Promise<{
+  student_id: string;
+  form_data: FormData;
+  prediction_result: PredictionResult;
+  created_at: string;
+  updated_at: string;
+}> {
+  const res = await fetch(`${API_BASE}/get-assessment/${studentId}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!res.ok) throw new Error(`Server ${res.status}`);
+  const result = await res.json();
+  if (result.error) throw new Error(result.error);
+  return result;
+}

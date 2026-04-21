@@ -216,7 +216,7 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI';
 
 ## 📄 License
 
-Built for education loan students. © 2026 AI Career Predictor.
+Built for education loan students. © 2026 CareerLadder.
 
 ## 🤝 Contributing
 
